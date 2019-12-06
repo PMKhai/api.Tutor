@@ -1,5 +1,6 @@
 const { db } = require('../db');
 const bcrypt = require('bcrypt');
+const buffer = require('buffer').Buffer;
 const USERS = 'Users';
 const SALT_ROUNDS = 10;
 const get = async (email) => {
@@ -13,9 +14,13 @@ exports.vailidPassWord = async (email, password) => {
 };
 exports.register = async (user) => {
   const hash = await bcrypt.hash(user.password, SALT_ROUNDS);
+  const isActiveToken = buffer.from(user.email).toString('base64');
   return await db.records.collection(USERS).insertOne({
     email: user.email,
     password: hash,
+    isTutor: user.isTutor,
+    isActive: false,
+    isActiveToken,
     name: user.name ? user.name : 'Noname',
     p_number: user.p_number ? user.p_number : '',
     urlAvatar: user.urlAvatar
@@ -27,16 +32,14 @@ exports.validJwtPayloadId = async (id) => {
   return await db.records.collection(USERS).findOne({ email: id });
 };
 exports.editInfo = async (email, info) => {
-  return await db.records
-    .collection(USERS)
-    .updateOne(
-      { email: email },
-      {
-        $set: {
-          name: info.name,
-          p_number: info.p_number,
-          urlAvatar: info.urlAvatar,
-        },
-      }
-    );
+  return await db.records.collection(USERS).updateOne(
+    { email: email },
+    {
+      $set: {
+        name: info.name,
+        p_number: info.p_number,
+        urlAvatar: info.urlAvatar,
+      },
+    }
+  );
 };
