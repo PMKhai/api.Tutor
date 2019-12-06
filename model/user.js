@@ -28,7 +28,8 @@ exports.register = async (user) => {
       : 'https://firebasestorage.googleapis.com/v0/b/caro-react-redux.appspot.com/o/default-avatar.jpg?alt=media&token=744e536e-d2a9-4b72-8bf2-e10c55819922',
     address: '', 
     overview:'',
-    skills: {} 
+    skills: [],
+    price: 0, 
   });
 };
 exports.validJwtPayloadId = async (id) => {
@@ -44,7 +45,8 @@ exports.editInfo = async (email, info) => {
         urlAvatar: info.urlAvatar,
         address: info.address,
         overview: info.overview,
-        skills: info.skills
+        skills: info.skills,
+        price: info.price
       },
     }
   );
