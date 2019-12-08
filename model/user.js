@@ -1,6 +1,7 @@
 const { db } = require('../db');
 const bcrypt = require('bcrypt');
 const buffer = require('buffer').Buffer;
+const ObjectID = require('mongodb').ObjectID;
 const USERS = 'Users';
 const SALT_ROUNDS = 10;
 const get = async (email) => {
@@ -56,4 +57,8 @@ exports.getAllTutor = async () => {
     .collection(USERS)
     .find({ isTutor: true })
     .toArray();
+};
+
+exports.getById = async (id) => {
+  return await db.records.collection(USERS).findOne({ _id: ObjectID(id) });
 };
