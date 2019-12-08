@@ -8,6 +8,7 @@ const cors = require('cors');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/user');
 const profileRouter = require('./routes/profile');
+const tutorRouter = require('./routes/tutor');
 
 var app = express();
 // fix cors
@@ -26,7 +27,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/user', usersRouter);
-app.use('/me',profileRouter);
+app.use('/me', profileRouter);
+app.use('/tutor', tutorRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
