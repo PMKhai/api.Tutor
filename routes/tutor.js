@@ -12,10 +12,15 @@ router.get('/all', async (req, res) => {
     delete element.password;
   });
 
-  if (!!tutorListing)
+  // Sort by rating, price
+  const result = _.reverse(_.sortBy(tutorListing, ['rating', 'price']));
+
+  console.log('tutor listing---', result);
+
+  if (result)
     return res
       .status(200)
-      .json({ returncode: 0, returnMessage: 'Successfully', tutorListing });
+      .json({ returncode: 0, returnMessage: 'Successfully', result });
   else return res.status(500).json({ returncode: 1, returnMessage: 'Error' });
 });
 
@@ -24,10 +29,9 @@ router.get('/toptutor', async (req, res) => {
   const tutorListing = await userModel.getAllTutor();
 
   const lenght = tutorListing.leght;
-  const result = _.slice(
-    _.sortBy(tutorListing, ['rating']),
-    lenght - 4,
-    lenght
+  // Sort by rating, price
+  const result = _.reverse(
+    _.slice(_.sortBy(tutorListing, ['rating', 'price']), lenght - 4, lenght)
   );
   console.log('top tutor---', result);
 
