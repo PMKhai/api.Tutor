@@ -28,12 +28,12 @@ router.get('/all', async (req, res) => {
 router.get('/toptutor', async (req, res) => {
   const tutorListing = await userModel.getAllTutor();
 
-  const lenght = tutorListing.leght;
   // Sort by rating, price
-  const result = _.reverse(
-    _.slice(_.sortBy(tutorListing, ['rating', 'price']), lenght - 4, lenght)
+  const result = _.slice(
+    _.reverse(_.sortBy(tutorListing, ['rating', 'price'])),
+    0,
+    4
   );
-  console.log('top tutor---', result);
 
   result.forEach((element) => {
     delete element.password;
