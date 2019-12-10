@@ -20,8 +20,8 @@ router.get('/all', async (req, res) => {
   if (result)
     return res
       .status(200)
-      .json({ returncode: 0, returnMessage: 'Successfully', result });
-  else return res.status(500).json({ returncode: 1, returnMessage: 'Error' });
+      .json({ returncode: 1, returnMessage: 'Successfully', result });
+  else return res.status(500).json({ returncode: 0, returnMessage: 'Error' });
 });
 
 // GET top 4 tutor listing
@@ -42,8 +42,8 @@ router.get('/toptutor', async (req, res) => {
   if (!!result)
     return res
       .status(200)
-      .json({ returncode: 0, returnMessage: 'Successfully', topTutor: result });
-  else return res.status(500).json({ returncode: 1, returnMessage: 'Error' });
+      .json({ returncode: 1, returnMessage: 'Successfully', topTutor: result });
+  else return res.status(500).json({ returncode: 0, returnMessage: 'Error' });
 });
 
 // Get tutor by id
@@ -56,8 +56,8 @@ router.get('/view', async (req, res) => {
   if (!!tutor)
     return res
       .status(200)
-      .json({ returncode: 0, returnMessage: 'Successfully', tutorInfo: tutor });
-  else return res.status(500).json({ returncode: 1, returnMessage: 'Error' });
+      .json({ returncode: 1, returnMessage: 'Successfully', tutorInfo: tutor });
+  else return res.status(500).json({ returncode: 0, returnMessage: 'Error' });
 });
 
 module.exports = router;
