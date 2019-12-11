@@ -26,11 +26,12 @@ exports.register = async (user) => {
     p_number: user.p_number ? user.p_number : '',
     urlAvatar: user.urlAvatar
       ? user.urlAvatar
-      : 'https://firebasestorage.googleapis.com/v0/b/caro-react-redux.appspot.com/o/default-avatar.jpg?alt=media&token=744e536e-d2a9-4b72-8bf2-e10c55819922',
+      : 'https://firebasestorage.googleapis.com/v0/b/caro-react-redux.appspot.com/o/dafault-avatar.jpg?alt=media&token=690645e6-8b99-4542-a8c7-1f4537bd19ae',
     address: '',
     overview: '',
     skills: [],
     price: 0,
+    rating: 0,
   });
 };
 exports.validJwtPayloadId = async (id) => {

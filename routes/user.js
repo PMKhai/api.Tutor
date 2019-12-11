@@ -75,6 +75,9 @@ router.put('/edit', (req, res, next) => {
       if (isUpdated) {
         const newUser = await userModel.get(user.email);
         if (newUser) {
+          // newUser.forEach((element) => {
+          //   delete element.password;
+          // });
           return res.status(200).json({
             returncode: 1,
             returnmessage: 'updated successfully',

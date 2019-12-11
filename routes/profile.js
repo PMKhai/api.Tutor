@@ -10,7 +10,9 @@ router.get("/", (req, res, next) => {
         user: user
       });
     } else {
-      
+      // user.forEach((element) => {
+      //   delete element.password;
+      // });
       return res.status(200).json({
         returncode: 1,
         returnmessage: "profile founded",
