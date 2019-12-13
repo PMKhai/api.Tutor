@@ -27,7 +27,10 @@ exports.register = async (user) => {
     urlAvatar: user.urlAvatar
       ? user.urlAvatar
       : 'https://firebasestorage.googleapis.com/v0/b/caro-react-redux.appspot.com/o/dafault-avatar.jpg?alt=media&token=690645e6-8b99-4542-a8c7-1f4537bd19ae',
-    address: '',
+    address: {
+      province: '',
+      district: '',
+    },
     overview: '',
     skills: [],
     price: 0,
