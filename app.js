@@ -9,7 +9,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/user');
 const profileRouter = require('./routes/profile');
 const tutorRouter = require('./routes/tutor');
-
+const skillRouter = require('./routes/skill')
 var app = express();
 // fix cors
 app.use(cors());
@@ -29,7 +29,7 @@ app.use('/', indexRouter);
 app.use('/user', usersRouter);
 app.use('/me', profileRouter);
 app.use('/tutor', tutorRouter);
-
+app.use('/skill',skillRouter)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
