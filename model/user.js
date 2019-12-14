@@ -1,6 +1,5 @@
 const { db } = require('../db');
 const bcrypt = require('bcrypt');
-const buffer = require('buffer').Buffer;
 const ObjectID = require('mongodb').ObjectID;
 const USERS = 'Users';
 const SALT_ROUNDS = 10;
@@ -13,15 +12,14 @@ exports.vailidPassWord = async (email, password) => {
   if (user && bcrypt.compareSync(password, user.password)) return user;
   return null;
 };
-exports.register = async (user) => {
+exports.register = async (user,token) => {
   const hash = await bcrypt.hash(user.password, SALT_ROUNDS);
-  const isActiveToken = buffer.from(user.email).toString('base64');
   return await db.records.collection(USERS).insertOne({
     email: user.email,
     password: hash,
     isTutor: user.isTutor,
-    isActive: false,
-    isActiveToken,
+    isActivated: false,
+    token,
     name: user.name ? user.name : 'Noname',
     p_number: user.p_number ? user.p_number : '',
     urlAvatar: user.urlAvatar
@@ -65,4 +63,25 @@ exports.getAllTutor = async () => {
 
 exports.getById = async (id) => {
   return await db.records.collection(USERS).findOne({ _id: ObjectID(id) });
+};
+exports.verifyemail = async (token) => {
+
+  const user = await db.records.collection(USERS).findOne({token});
+  if(user)
+  {
+      await db.records.collection(USERS).updateOne({
+          token : token
+      }, {
+          $set: {
+              isActivated: true,
+          },
+          $unset: {
+              token: 1,
+          }
+      }, {
+          upsert: true
+      })
+  }
+  return user;
+
 };
