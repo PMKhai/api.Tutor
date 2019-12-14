@@ -41,11 +41,12 @@ router.post('/login', (req, res, next) => {
 router.get('/verify', async (req, res) => {
   const user = await userModel.verifyemail(req.query.id);
   if (user) {
-    return res.status(200).json({
-      returncode: 1,
-      returnmessage: 'verified successfully',
-      user: user,
-    });
+    // return res.status(200).json({
+    //   returncode: 1,
+    //   returnmessage: 'verified successfully',
+    //   user: user,
+    // });
+    return res.redirect('http://localhost:3000/')
   } else {
     return res.status(401).json({
       returncode: 0,
