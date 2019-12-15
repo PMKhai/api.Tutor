@@ -66,7 +66,7 @@ router.get('/view', async (req, res) => {
 router.get('/registration', (req, res) => {
   passport.authenticate('jwt', { session: false }, async (err, user, info) => {
     if (err || !user) {
-      return res.status(400).json({
+      return res.status(401).json({
         returnCode: 0,
         returnMessage: info ? info.message : err,
       });
@@ -75,10 +75,9 @@ router.get('/registration', (req, res) => {
         .status(400)
         .json({ returnCode: 0, returnMesage: 'Wrong role' });
     } else {
-      const { tutor } = req.body;
-      console.log(tutor);
+      const { email } = user;
       const registrationList = await contractModel.getContractByEmailTutor(
-        tutor
+        email
       );
 
       if (registrationList) {
