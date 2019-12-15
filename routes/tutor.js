@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const passport = require('passport');
 const userModel = require('../model/user');
+const contractModel = require('../model/contracts');
 const _ = require('lodash');
 
 // GET all tutors listing
@@ -58,6 +60,41 @@ router.get('/view', async (req, res) => {
       .status(200)
       .json({ returncode: 1, returnMessage: 'Successfully', tutorInfo: tutor });
   else return res.status(500).json({ returncode: 0, returnMessage: 'Error' });
+});
+
+// Get registration request
+router.get('/registration', (req, res) => {
+  passport.authenticate('jwt', { session: false }, async (err, user, info) => {
+    if (err || !user) {
+      return res.status(400).json({
+        returnCode: 0,
+        returnMessage: info ? info.message : err,
+      });
+    } else if (!user.isTutor) {
+      return res
+        .status(400)
+        .json({ returnCode: 0, returnMesage: 'Wrong role' });
+    } else {
+      const { tutor } = req.body;
+      console.log(tutor);
+      const registrationList = await contractModel.getContractByEmailTutor(
+        tutor
+      );
+
+      if (registrationList) {
+        return res.status(200).json({
+          returnCode: 1,
+          returnMessage: 'successfully',
+          registration: registrationList,
+        });
+      } else {
+        return res.status(500).json({
+          returnCode: 0,
+          returnMessage: 'Error',
+        });
+      }
+    }
+  })(req, res);
 });
 
 module.exports = router;
