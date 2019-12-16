@@ -96,4 +96,39 @@ router.get('/registration', (req, res) => {
   })(req, res);
 });
 
+// Get revenue
+router.get('/revenue', (req, res) => {
+  passport.authenticate('jwt', { session: false }, async (err, user, info) => {
+    if (err || !user) {
+      return res.status(401).json({
+        returnCode: 0,
+        returnMessage: info ? info.message : err,
+      });
+    } else if (!user.isTutor) {
+      return res
+        .status(400)
+        .json({ returnCode: 0, returnMesage: 'Wrong role' });
+    } else {
+      const { email } = user;
+      const data = await contractModel.getContractByEmailTutor(email);
+
+      if (data) {
+        const revenue = _.filter(data, (o) => {
+          return o.payment > 0;
+        });
+
+        return res.status(200).json({
+          returnCode: 1,
+          returnMessage: 'successfully',
+          revenue,
+        });
+      } else {
+        return res.status(500).json({
+          returnCode: 0,
+          returnMessage: 'Error',
+        });
+      }
+    }
+  })(req, res);
+});
 module.exports = router;
