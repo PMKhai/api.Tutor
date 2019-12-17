@@ -64,7 +64,7 @@ exports.getAllTutor = async () => {
 exports.getById = async (id) => {
   return await db.records.collection(USERS).findOne({ _id: ObjectID(id) });
 };
-exports.verifyemail = async (token) => {
+exports.verifyEmail = async (token) => {
   const user = await db.records.collection(USERS).findOne({ token });
   if (user) {
     await db.records.collection(USERS).updateOne(
@@ -106,8 +106,6 @@ exports.changePassword = async (email, info) => {
   );
 };
 exports.addToken = async (email,token) => {
-
-
   return await db.records.collection(USERS).updateOne({
       email : email
   }, {
@@ -117,6 +115,7 @@ exports.addToken = async (email,token) => {
   }, {
       upsert: true
   })
-
-
 };
+exports.findToken = async (token) => {
+  return await db.records.collection(USERS).findOne({ token }); 
+}

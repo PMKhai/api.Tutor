@@ -40,7 +40,7 @@ router.post('/login', (req, res, next) => {
 });
 /* GET users listing. */
 router.get('/verify', async (req, res) => {
-  const user = await userModel.verifyemail(req.query.token);
+  const user = await userModel.verifyEmail(req.query.token);
   if (user) {
     // return res.status(200).json({
     //   returncode: 1,
@@ -66,7 +66,7 @@ const smtpTransport = nodemailer.createTransport({
 const sendmailRecover = (req, res, next) => {
   const token = buffer.from(req.body.email).toString('base64');
   const link =
-    'http://' + req.get('host') + 'user/recoverPassword?token=' + token;
+    'http://localhost:3000/changepassword?token=' + token;
   const mailOptions = {
     to: req.body.email,
     subject: 'Phục hồi tài khoản UBER FOR TUTOR',
@@ -141,14 +141,14 @@ router.put('/edit', (req, res, next) => {
           // });
           return res.status(200).json({
             returncode: 1,
-            returnmessage: 'updated successfully',
+            returnmessage: 'Updated successfully',
             newUser: newUser,
           });
         }
       } else {
         return res.status(500).json({
           returncode: 0,
-          returnmessage: 'failed to update',
+          returnmessage: 'Failed to update',
           user: user,
         });
       }
@@ -173,48 +173,68 @@ router.put('/changepassword', (req, res, next) => {
         if (isUpdated) {
           return res.status(200).json({
             returncode: 1,
-            returnmessage: 'changed password successfully',
+            returnmessage: 'Changed password successfully',
           });
         } else {
           return res.status(500).json({
             returncode: 0,
-            returnmessage: 'failed to change password',
+            returnmessage: 'Failed to change password',
           });
         }
       } else {
-        return res.status(400).json({
+        return res.status(201).json({
           returncode: 0,
-          returnmessage: 'current password is not correct',
+          returnmessage: 'Current password is not correct',
         });
       }
     }
   })(req, res, next);
 });
-router.post('/resetpassword', async (req, res, next) => {
+router.post('/sendmailreset', async (req, res, next) => {
   const user = await userModel.get(req.body.email);
   if (user && user.isActivated) {
-    const token = sendmailRecover(req,res,next)
-    const isAdded = userModel.addToken(req.body.email,token);
-    if(isAdded)
-    {
+    const token = sendmailRecover(req, res, next);
+    const isAdded = userModel.addToken(req.body.email, token);
+    if (isAdded) {
       return res.status(200).json({
         returncode: 1,
         returnmessage:
-          'Check your email for a message with a link to update your password',
+          'Email was sent. Plesae check your email to update your password',
       });
-    }
-    else
-    {
+    } else {
       return res.status(500).json({
         returncode: 0,
-        returnmessage:
-          'failed to send',
+        returnmessage: 'Failed to send',
       });
     }
   } else {
-    return res.status(400).json({
+    return res.status(201).json({
       returncode: 0,
-      returnmessage: 'Invalid email',
+      returnmessage: 'Invalid email or account is not verified with email',
+    });
+  }
+});
+router.put('/resetpassword', async (req, res, next) => {
+  const info = req.body;
+  const user = await userModel.findToken(info.token);
+  if (user) {
+    const isUpdated = await userModel.changePassword(user.email, info);
+
+    if (isUpdated) {
+      return res.status(200).json({
+        returncode: 1,
+        returnmessage: 'Changed password successfully',
+      });
+    } else {
+      return res.status(500).json({
+        returncode: 0,
+        returnmessage: 'Failed to change password',
+      });
+    }
+  } else {
+    return res.status(201).json({
+      returncode: 0,
+      returnmessage: 'Unauthorized token',
     });
   }
 });
