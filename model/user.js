@@ -105,3 +105,18 @@ exports.changePassword = async (email, info) => {
     }
   );
 };
+exports.addToken = async (email,token) => {
+
+
+  return await db.records.collection(USERS).updateOne({
+      email : email
+  }, {
+      $set: {
+          token: token ,
+      }
+  }, {
+      upsert: true
+  })
+
+
+};

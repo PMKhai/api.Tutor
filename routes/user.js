@@ -63,7 +63,7 @@ const smtpTransport = nodemailer.createTransport({
     pass: account.GMAIL_PASSWORD,
   },
 });
-const sendmailRecover = async (req, res, next) => {
+const sendmailRecover = (req, res, next) => {
   const token = buffer.from(req.body.email).toString('base64');
   const link =
     'http://' + req.get('host') + 'user/recoverPassword?token=' + token;
@@ -164,11 +164,11 @@ router.put('/changepassword', (req, res, next) => {
       });
     } else {
       const info = req.body;
-      console.log("curr",user.password)
-      console.log("conf",info.currentPassword)
-      const isMatch = bcrypt.compareSync(info.currentPassword,user.password);
+      console.log('curr', user.password);
+      console.log('conf', info.currentPassword);
+      const isMatch = bcrypt.compareSync(info.currentPassword, user.password);
       if (isMatch) {
-        const isUpdated = userModel.changePassword(user.email, info);
+        const isUpdated = await userModel.changePassword(user.email, info);
 
         if (isUpdated) {
           return res.status(200).json({
@@ -181,8 +181,7 @@ router.put('/changepassword', (req, res, next) => {
             returnmessage: 'failed to change password',
           });
         }
-      }
-      else {
+      } else {
         return res.status(400).json({
           returncode: 0,
           returnmessage: 'current password is not correct',
@@ -190,5 +189,33 @@ router.put('/changepassword', (req, res, next) => {
       }
     }
   })(req, res, next);
+});
+router.post('/resetpassword', async (req, res, next) => {
+  const user = await userModel.get(req.body.email);
+  if (user && user.isActivated) {
+    const token = sendmailRecover(req,res,next)
+    const isAdded = userModel.addToken(req.body.email,token);
+    if(isAdded)
+    {
+      return res.status(200).json({
+        returncode: 1,
+        returnmessage:
+          'Check your email for a message with a link to update your password',
+      });
+    }
+    else
+    {
+      return res.status(500).json({
+        returncode: 0,
+        returnmessage:
+          'failed to send',
+      });
+    }
+  } else {
+    return res.status(400).json({
+      returncode: 0,
+      returnmessage: 'Invalid email',
+    });
+  }
 });
 module.exports = router;
