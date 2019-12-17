@@ -87,23 +87,21 @@ exports.verifyemail = async (token) => {
   return user;
 };
 exports.changePassword = async (email, info) => {
-  if (info.newPassword != '') {
-    const hash = await bcrypt.hash(info.newPassword, SALT_ROUNDS);
-    return await db.records.collection(USERS).updateOne(
-      {
-        email: email,
+  const hash = await bcrypt.hash(info.newPassword, SALT_ROUNDS);
+  return await db.records.collection(USERS).updateOne(
+    {
+      email: email,
+    },
+    {
+      $set: {
+        password: hash,
       },
-      {
-        $set: {
-          password: hash,
-        },
-        $unset: {
-          token: 1,
-        },
+      $unset: {
+        token: 1,
       },
-      {
-        upsert: true,
-      }
-    );
-  }
+    },
+    {
+      upsert: true,
+    }
+  );
 };

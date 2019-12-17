@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const nodemailer = require('nodemailer');
 const account = require('../const/emailAcount');
+const bcrypt = require('bcrypt');
 // POST LOGIN
 router.post('/login', (req, res, next) => {
   //const json = { returncode: 0, returnmessage: '' };
@@ -163,17 +164,28 @@ router.put('/changepassword', (req, res, next) => {
       });
     } else {
       const info = req.body;
-      const isUpdated =  userModel.changePassword(user.email, info);
+      console.log("curr",user.password)
+      console.log("conf",info.currentPassword)
+      const isMatch = bcrypt.compareSync(info.currentPassword,user.password);
+      if (isMatch) {
+        const isUpdated = userModel.changePassword(user.email, info);
 
-      if (isUpdated) {
-        return res.status(200).json({
-          returncode: 1,
-          returnmessage: 'changed password successfully',
-        });
-      } else {
-        return res.status(500).json({
+        if (isUpdated) {
+          return res.status(200).json({
+            returncode: 1,
+            returnmessage: 'changed password successfully',
+          });
+        } else {
+          return res.status(500).json({
+            returncode: 0,
+            returnmessage: 'failed to change password',
+          });
+        }
+      }
+      else {
+        return res.status(400).json({
           returncode: 0,
-          returnmessage: 'failed to change password',
+          returnmessage: 'current password is not correct',
         });
       }
     }
