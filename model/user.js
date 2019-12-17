@@ -12,7 +12,7 @@ exports.vailidPassWord = async (email, password) => {
   if (user && bcrypt.compareSync(password, user.password)) return user;
   return null;
 };
-exports.register = async (user,token) => {
+exports.register = async (user, token) => {
   const hash = await bcrypt.hash(user.password, SALT_ROUNDS);
   return await db.records.collection(USERS).insertOne({
     email: user.email,
@@ -65,23 +65,45 @@ exports.getById = async (id) => {
   return await db.records.collection(USERS).findOne({ _id: ObjectID(id) });
 };
 exports.verifyemail = async (token) => {
-
-  const user = await db.records.collection(USERS).findOne({token});
-  if(user)
-  {
-      await db.records.collection(USERS).updateOne({
-          token : token
-      }, {
-          $set: {
-              isActivated: true,
-          },
-          $unset: {
-              token: 1,
-          }
-      }, {
-          upsert: true
-      })
+  const user = await db.records.collection(USERS).findOne({ token });
+  if (user) {
+    await db.records.collection(USERS).updateOne(
+      {
+        token: token,
+      },
+      {
+        $set: {
+          isActivated: true,
+        },
+        $unset: {
+          token: 1,
+        },
+      },
+      {
+        upsert: true,
+      }
+    );
   }
   return user;
-
+};
+exports.changePassword = async (email, info) => {
+  if (info.newPassword != '') {
+    const hash = await bcrypt.hash(info.newPassword, SALT_ROUNDS);
+    return await db.records.collection(USERS).updateOne(
+      {
+        email: email,
+      },
+      {
+        $set: {
+          password: hash,
+        },
+        $unset: {
+          token: 1,
+        },
+      },
+      {
+        upsert: true,
+      }
+    );
+  }
 };

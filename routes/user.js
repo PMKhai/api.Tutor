@@ -39,14 +39,14 @@ router.post('/login', (req, res, next) => {
 });
 /* GET users listing. */
 router.get('/verify', async (req, res) => {
-  const user = await userModel.verifyemail(req.query.id);
+  const user = await userModel.verifyemail(req.query.token);
   if (user) {
     // return res.status(200).json({
     //   returncode: 1,
     //   returnmessage: 'verified successfully',
     //   user: user,
     // });
-    return res.redirect('http://localhost:3000/')
+    return res.redirect('http://localhost:3000/');
   } else {
     return res.status(401).json({
       returncode: 0,
@@ -64,7 +64,8 @@ const smtpTransport = nodemailer.createTransport({
 });
 const sendmailRecover = async (req, res, next) => {
   const token = buffer.from(req.body.email).toString('base64');
-  const link = 'http://' + req.get('host') + 'user/recoverPassword?id=' + token;
+  const link =
+    'http://' + req.get('host') + 'user/recoverPassword?token=' + token;
   const mailOptions = {
     to: req.body.email,
     subject: 'Phục hồi tài khoản UBER FOR TUTOR',
@@ -74,7 +75,7 @@ const sendmailRecover = async (req, res, next) => {
       '>Click để phục hồi</a>',
   };
   // eslint-disable-next-line no-unused-vars
-  smtpTransport.sendMail(mailOptions, function(error, info) {
+  smtpTransport.sendMail(mailOptions, (error) => {
     if (error) next(error);
   });
   return token;
@@ -82,7 +83,7 @@ const sendmailRecover = async (req, res, next) => {
 const sendmailActivate = (req, res, next) => {
   const token = buffer.from(req.body.email).toString('base64');
 
-  const link = 'http://' + req.get('host') + '/user/verify?id=' + token;
+  const link = 'http://' + req.get('host') + '/user/verify?token=' + token;
   const mailOptions = {
     to: req.body.email,
     subject: 'Kích hoạt tài khoản UBER FOR TUTOR',
@@ -92,7 +93,7 @@ const sendmailActivate = (req, res, next) => {
       '>Click để xác thực</a>',
   };
   console.log(mailOptions);
-  smtpTransport.sendMail(mailOptions, function(error, info) {
+  smtpTransport.sendMail(mailOptions, (error) => {
     if (error) next(error);
   });
   return token;
@@ -148,6 +149,31 @@ router.put('/edit', (req, res, next) => {
           returncode: 0,
           returnmessage: 'failed to update',
           user: user,
+        });
+      }
+    }
+  })(req, res, next);
+});
+router.put('/changepassword', (req, res, next) => {
+  passport.authenticate('jwt', { session: false }, async (err, user, info) => {
+    if (err || !user) {
+      return res.status(400).json({
+        returncode: 0,
+        returnmessage: info ? info.message : err,
+      });
+    } else {
+      const info = req.body;
+      const isUpdated =  userModel.changePassword(user.email, info);
+
+      if (isUpdated) {
+        return res.status(200).json({
+          returncode: 1,
+          returnmessage: 'changed password successfully',
+        });
+      } else {
+        return res.status(500).json({
+          returncode: 0,
+          returnmessage: 'failed to change password',
         });
       }
     }
