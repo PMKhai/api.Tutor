@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 const buffer = require('buffer').Buffer;
 const userModel = require('../model/user');
+const massageModel = require('../model/message');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const nodemailer = require('nodemailer');
@@ -65,8 +66,7 @@ const smtpTransport = nodemailer.createTransport({
 });
 const sendmailRecover = (req, res, next) => {
   const token = buffer.from(req.body.email).toString('base64');
-  const link =
-    'http://localhost:3000/changepassword?token=' + token;
+  const link = 'http://localhost:3000/changepassword?token=' + token;
   const mailOptions = {
     to: req.body.email,
     subject: 'Phục hồi tài khoản UBER FOR TUTOR',
@@ -237,5 +237,31 @@ router.put('/resetpassword', async (req, res, next) => {
       returnmessage: 'Unauthorized token',
     });
   }
+});
+router.get('/messages', async (req, res) => {
+  passport.authenticate('jwt', { session: false }, async (err, user, info) => {
+    if (err || !user) {
+      return res.status(401).json({
+        returnCode: 0,
+        returnMessage: info ? info.message : err,
+      });
+    } else {
+      const { email } = user;
+      const contactList = await massageModel.getMessagesByEmail(email);
+
+      if (contactList) {
+        return res.status(200).json({
+          returnCode: 1,
+          returnMessage: 'successfully',
+          payload:{contactList, email}
+        });
+      } else {
+        return res.status(500).json({
+          returnCode: 0,
+          returnMessage: 'Error',
+        });
+      }
+    }
+  })(req, res);
 });
 module.exports = router;
