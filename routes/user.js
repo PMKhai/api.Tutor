@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 const buffer = require('buffer').Buffer;
 const userModel = require('../model/user');
-const massageModel = require('../model/message');
+const messageModel = require('../model/message');
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const nodemailer = require('nodemailer');
@@ -247,7 +247,7 @@ router.get('/messages', async (req, res) => {
       });
     } else {
       const { email } = user;
-      const result = await massageModel.getMessagesByEmail(email);
+      const result = await messageModel.getMessagesByEmail(email);
 
       const contactList = result.map((element) => {
         element.userOne.email === email
@@ -271,4 +271,37 @@ router.get('/messages', async (req, res) => {
     }
   })(req, res);
 });
+router.put('/sendmessage', async (req, res) => {
+  passport.authenticate('jwt', { session: false }, async (err, user, info) => {
+    if (err || !user) {
+      return res.status(401).json({
+        returnCode: 0,
+        returnMessage: info ? info.message : err,
+      });
+    } else {
+      const io = req.app.get('io');
+      const { email } = user;
+      const { message, id } = req.body;
+
+      io.in(id).emit('message', { email, message });
+      const result = await messageModel.updateMessageArrayById(
+        id,
+        email,
+        message
+      );
+
+      if (result)
+        return res.status(200).json({
+          returnCode: 1,
+          returnMessage: 'Update message successfully',
+        });
+      else
+        return res.status(500).json({
+          returnCode: 0,
+          returnMessage: 'Error',
+        });
+    }
+  })(req, res);
+});
+
 module.exports = router;
