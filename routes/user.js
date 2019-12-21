@@ -247,13 +247,20 @@ router.get('/messages', async (req, res) => {
       });
     } else {
       const { email } = user;
-      const contactList = await massageModel.getMessagesByEmail(email);
+      const result = await massageModel.getMessagesByEmail(email);
+
+      const contactList = result.map((element) => {
+        element.userOne.email === email
+          ? (element.contact = element.userTwo)
+          : (element.contact = element.userOne);
+        return element;
+      });
 
       if (contactList) {
         return res.status(200).json({
           returnCode: 1,
           returnMessage: 'successfully',
-          payload:{contactList, email}
+          payload: { contactList, email },
         });
       } else {
         return res.status(500).json({
