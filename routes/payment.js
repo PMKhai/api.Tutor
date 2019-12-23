@@ -9,6 +9,7 @@ const payment = require('../config/payment');
 const dateFormat = require('dateformat');
 const sha256 = require('sha256');
 const querystring = require('qs');
+const contractModel = require('../model/contracts')
 router.get('/', function(req, res, next) {
   res.render('orderlist', { title: 'Danh sách đơn hàng' });
 });
@@ -26,7 +27,7 @@ router.get('/create_payment_url', function(req, res, next) {
   });
 });
 
-router.post('/create_payment_url', function(req, res, next) {
+router.post('/create_payment_url', async (req, res, next) => {
   var ipAddr =
     req.headers['x-forwarded-for'] ||
     req.connection.remoteAddress ||
@@ -41,10 +42,9 @@ router.post('/create_payment_url', function(req, res, next) {
   var date = new Date();
 
   var createDate = dateFormat(date, 'yyyymmddHHmmss');
-  var orderId = dateFormat(date, 'HHmmss');
+  var orderId = createDate;
   var amount = req.body.amount;
   var bankCode = req.body.bankCode;
-
   var orderInfo = req.body.orderDescription;
   var orderType = req.body.orderType;
   var locale = req.body.language;
@@ -62,7 +62,7 @@ router.post('/create_payment_url', function(req, res, next) {
   vnp_Params['vnp_TxnRef'] = orderId;
   vnp_Params['vnp_OrderInfo'] = orderInfo;
   vnp_Params['vnp_OrderType'] = orderType;
-  vnp_Params['vnp_Amount'] = amount * 100;
+  vnp_Params['vnp_Amount'] = amount * 100 * 23000;
   vnp_Params['vnp_ReturnUrl'] = returnUrl;
   vnp_Params['vnp_IpAddr'] = ipAddr;
   vnp_Params['vnp_CreateDate'] = createDate;
@@ -80,11 +80,26 @@ router.post('/create_payment_url', function(req, res, next) {
   vnp_Params['vnp_SecureHashType'] = 'SHA256';
   vnp_Params['vnp_SecureHash'] = secureHash;
   vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: true });
-
+   
+  // add contract vào db
+  const contract = req.body;
+  contract.idContract = orderId;
+  contract.dayOfPayment = createDate;
+ 
+  const isAdded = await contractModel.addContract(contract);
+  if(isAdded)
+  {
+    res.status(200).json({ returncode:1,returnmessage:"successfully", result: vnpUrl });
+  }
+  else
+  {
+      res.status(201).json({ returncode:0,returnmessage:"error"});
+  }
+  //
   //Neu muon dung Redirect thi dong dong ben duoi
-  res.status(200).json({ code: '00', data: vnpUrl });
+  
   //Neu muon dung Redirect thi mo dong ben duoi va dong dong ben tren
-  //res.redirect(vnpUrl)
+  // res.redirect(vnpUrl);
 });
 
 router.get('/vnpay_return', function(req, res, next) {
