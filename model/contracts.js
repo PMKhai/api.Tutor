@@ -2,30 +2,45 @@ const { db } = require('../db');
 const ObjectID = require('mongodb').ObjectID;
 const CONTRACTS = 'Contracts';
 
-exports.getContractByEmailTutor = async (email) => {
-  return await db.records
+exports.getContractByEmail = async (email) => {
+  const forTutor = await db.records
     .collection(CONTRACTS)
     .find({ tutor: email })
     .toArray();
+  if (forTutor.length > 0) {
+    return forTutor;
+  } else {
+    return await db.records
+      .collection(CONTRACTS)
+      .find({ student: email })
+      .toArray();
+  }
 };
-exports.updateStatusAccept = async (id) => {
+exports.getContractById = async (idContract) => {
+  return await db.records
+    .collection(CONTRACTS)
+    .find({ idContract: idContract })
+    .toArray();
+};
+exports.updateStatus = async (id, status) => {
   return await db.records.collection(CONTRACTS).updateOne(
     { _id: ObjectID(id) },
-    { $set: { status: 'doing' } },
+    { $set: { status: status } },
     {
       upsert: true,
     }
   );
 };
-exports.updateStatusCancel = async (id) => {
+exports.report = async (contract) => {
   return await db.records.collection(CONTRACTS).updateOne(
-    { _id: ObjectID(id) },
-    { $set: { status: 'cancel' } },
+    { _id: ObjectID(contract._id) },
+    { $set: { status: contract.status, reason: contract.reason } },
     {
       upsert: true,
     }
   );
 };
+
 exports.addContract = async (contract) => {
   return await db.records.collection(CONTRACTS).insertOne({
     idContract: contract.idContract, // mã hợp đồng dùng cho việc truy xuất đồng thời mã
@@ -35,10 +50,10 @@ exports.addContract = async (contract) => {
     hourlyPrice: contract.hourlyPrice,
     weeklyLimit: contract.weeklyLimit,
     monthlyLimit: contract.monthlyLimit,
-    weekylyBonus: contract.weekylyBonus,
+    weekylyBonus: contract.weeklyBonus,
     totalHour: contract.totalHour,
     totalMoney: contract.amount,
-    status: 'waiting',
+    status: 'pending',
     isPaid: false, //nếu đã được thanh toán qua sandbox vnpay thì update thành true
     dayOfPayment: contract.dayOfPayment, // ngày thanh toán qua sandbox vn pay
     dayOfHire: contract.dayOfHire,

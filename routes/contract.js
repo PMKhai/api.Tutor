@@ -9,7 +9,7 @@ const payment = require('../config/payment');
 const dateFormat = require('dateformat');
 const sha256 = require('sha256');
 const querystring = require('qs');
-const contractModel = require('../model/contracts')
+const contractModel = require('../model/contracts');
 router.get('/', function(req, res, next) {
   res.render('orderlist', { title: 'Danh sách đơn hàng' });
 });
@@ -25,6 +25,42 @@ router.get('/create_payment_url', function(req, res, next) {
     amount: 10000,
     description: desc,
   });
+});
+
+router.get('/create_payment_url', function(req, res, next) {
+  //var dateFormat = require('dateformat');
+  var date = new Date();
+
+  var desc =
+    'Thanh toan don hang thoi gian: ' + dateFormat(date, 'yyyy-mm-dd HH:mm:ss');
+  res.render('order', {
+    title: 'Tạo mới đơn hàng',
+    amount: 10000,
+    description: desc,
+  });
+});
+
+router.post('/addnew', async (req, res, next) => {
+  // add contract vào db
+  const contract = req.body;
+  var date = new Date();
+  contract.idContract = dateFormat(date, 'yyyymmddHHmmss');
+  contract.dayOfPayment = '';
+
+  const isAdded = await contractModel.addContract(contract);
+  if (isAdded) {
+    res
+      .status(200)
+      .json({
+        returncode: 1,
+        returnmessage:
+          'Hire contract was sent to tutor. Please wait for your registration !!!',
+      });
+  } else {
+    res
+      .status(201)
+      .json({ returncode: 0, returnmessage: 'Something is wrong !!!' });
+  }
 });
 
 router.post('/create_payment_url', async (req, res, next) => {
@@ -80,26 +116,26 @@ router.post('/create_payment_url', async (req, res, next) => {
   vnp_Params['vnp_SecureHashType'] = 'SHA256';
   vnp_Params['vnp_SecureHash'] = secureHash;
   vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: true });
-   
-  // add contract vào db
-  const contract = req.body;
-  contract.idContract = orderId;
-  contract.dayOfPayment = createDate;
- 
-  const isAdded = await contractModel.addContract(contract);
-  if(isAdded)
-  {
-    res.status(200).json({ returncode:1,returnmessage:"successfully", result: vnpUrl });
-  }
-  else
-  {
-      res.status(201).json({ returncode:0,returnmessage:"error"});
-  }
+
+  // // add contract vào db
+  // const contract = req.body;
+  // contract.idContract = orderId;
+  // contract.dayOfPayment = createDate;
+
+  // const isAdded = await contractModel.addContract(contract);
+  // if(isAdded)
+  // {
+  //   res.status(200).json({ returncode:1,returnmessage:"successfully", result: vnpUrl });
+  // }
+  // else
+  // {
+  //     res.status(201).json({ returncode:0,returnmessage:"error"});
+  // }
   //
   //Neu muon dung Redirect thi dong dong ben duoi
-  
+
   //Neu muon dung Redirect thi mo dong ben duoi va dong dong ben tren
-  // res.redirect(vnpUrl);
+  res.redirect(vnpUrl);
 });
 
 router.get('/vnpay_return', function(req, res, next) {
@@ -147,5 +183,59 @@ function sortObject(o) {
   }
   return sorted;
 }
+router.put('/acceptcontract', (req, res) => {
+  passport.authenticate('jwt', { session: false }, async (err, user, info) => {
+    if (err || !user) {
+      return res.status(401).json({
+        returnCode: 0,
+        returnMessage: info ? info.message : err,
+      });
+    } else if (!user.isTutor) {
+      return res
+        .status(400)
+        .json({ returnCode: 0, returnMesage: 'Wrong role' });
+    } else {
+      const { id } = req.body;
+      const result = await contractModel.updateStatusAccept(id);
 
+      if (result) {
+        return res.status(200).json({
+          returnCode: 1,
+          returnMessage: 'successfully',
+        });
+      } else {
+        return res.status(500).json({
+          returnCode: 0,
+          returnMessage: 'Error',
+        });
+      }
+    }
+  })(req, res);
+});
+
+router.put('/cancelcontract', (req, res) => {
+  passport.authenticate('jwt', { session: false }, async (err, user, info) => {
+    if (err || !user) {
+      return res.status(401).json({
+        returnCode: 0,
+        returnMessage: info ? info.message : err,
+      });
+    }  else {
+      const { id } = req.body;
+      const result = await contractModel.updateStatusCancel(id);
+
+      if (result) {
+        return res.status(200).json({
+          returnCode: 1,
+          returnMessage: 'successfully',
+        });
+      } else {
+        return res.status(500).json({
+          returnCode: 0,
+          returnMessage: 'Error',
+        });
+      }
+    }
+  })(req, res);
+});
 module.exports = router;

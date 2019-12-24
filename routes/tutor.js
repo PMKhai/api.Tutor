@@ -62,40 +62,6 @@ router.get('/view', async (req, res) => {
   else return res.status(500).json({ returncode: 0, returnMessage: 'Error' });
 });
 
-// Get registration request
-router.get('/registration', (req, res) => {
-  passport.authenticate('jwt', { session: false }, async (err, user, info) => {
-    if (err || !user) {
-      return res.status(401).json({
-        returnCode: 0,
-        returnMessage: info ? info.message : err,
-      });
-    } else if (!user.isTutor) {
-      return res
-        .status(400)
-        .json({ returnCode: 0, returnMesage: 'Wrong role' });
-    } else {
-      const { email } = user;
-      const registrationList = await contractModel.getContractByEmailTutor(
-        email
-      );
-
-      if (registrationList) {
-        return res.status(200).json({
-          returnCode: 1,
-          returnMessage: 'successfully',
-          registration: registrationList,
-        });
-      } else {
-        return res.status(500).json({
-          returnCode: 0,
-          returnMessage: 'Error',
-        });
-      }
-    }
-  })(req, res);
-});
-
 // Get revenue
 router.get('/revenue', (req, res) => {
   passport.authenticate('jwt', { session: false }, async (err, user, info) => {
@@ -110,7 +76,7 @@ router.get('/revenue', (req, res) => {
         .json({ returnCode: 0, returnMesage: 'Wrong role' });
     } else {
       const { email } = user;
-      const data = await contractModel.getContractByEmailTutor(email);
+      const data = await contractModel.getContractByEmail(email);
 
       if (data) {
         const revenue = _.filter(data, (o) => {
@@ -144,7 +110,7 @@ router.put('/acceptcontract', (req, res) => {
         .json({ returnCode: 0, returnMesage: 'Wrong role' });
     } else {
       const { id } = req.body;
-      const result = await contractModel.updateStatusAccept(id);
+      const result = await contractModel.updateStatus(id,"pending");
 
       if (result) {
         return res.status(200).json({
@@ -160,20 +126,16 @@ router.put('/acceptcontract', (req, res) => {
     }
   })(req, res);
 });
-router.put('/canceltcontract', (req, res) => {
+router.put('/cancelcontract', (req, res) => {
   passport.authenticate('jwt', { session: false }, async (err, user, info) => {
     if (err || !user) {
       return res.status(401).json({
         returnCode: 0,
         returnMessage: info ? info.message : err,
       });
-    } else if (!user.isTutor) {
-      return res
-        .status(400)
-        .json({ returnCode: 0, returnMesage: 'Wrong role' });
     } else {
       const { id } = req.body;
-      const result = await contractModel.updateStatusCancel(id);
+      const result = await contractModel.updateStatus(id,"cancel");
 
       if (result) {
         return res.status(200).json({
@@ -184,6 +146,57 @@ router.put('/canceltcontract', (req, res) => {
         return res.status(500).json({
           returnCode: 0,
           returnMessage: 'Error',
+        });
+      }
+    }
+  })(req, res);
+});
+router.put('/donecontract', (req, res) => {
+  passport.authenticate('jwt', { session: false }, async (err, user, info) => {
+    if (err || !user) {
+      return res.status(401).json({
+        returnCode: 0,
+        returnMessage: info ? info.message : err,
+      });
+    } else {
+      const { id } = req.body;
+      const result = await contractModel.updateStatus(id,"done");
+
+      if (result) {
+        return res.status(200).json({
+          returnCode: 1,
+          returnMessage: 'successfully',
+        });
+      } else {
+        return res.status(500).json({
+          returnCode: 0,
+          returnMessage: 'Error',
+        });
+      }
+    }
+  })(req, res);
+});
+router.put('/reportcontract', (req, res) => {
+  passport.authenticate('jwt', { session: false }, async (err, user, info) => {
+    if (err || !user) {
+      return res.status(401).json({
+        returnCode: 0,
+        returnMessage: info ? info.message : err,
+      });
+    } else {
+      const contract= req.body;
+      console.log(contract);
+      const result = await contractModel.report(contract);
+
+      if (result) {
+        return res.status(200).json({
+          returnCode: 1,
+          returnMessage: 'Your report was sent to administration, you will be contacted soon !!!',
+        });
+      } else {
+        return res.status(201).json({
+          returnCode: 0,
+          returnMessage: 'Something is wrong !!!',
         });
       }
     }
