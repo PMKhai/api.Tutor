@@ -1,4 +1,5 @@
 const { db } = require('../db');
+const ObjectID = require('mongodb').ObjectID;
 const CONTRACTS = 'Contracts';
 
 exports.getContractByEmailTutor = async (email) => {
@@ -6,6 +7,24 @@ exports.getContractByEmailTutor = async (email) => {
     .collection(CONTRACTS)
     .find({ tutor: email })
     .toArray();
+};
+exports.updateStatusAccept = async (id) => {
+  return await db.records.collection(CONTRACTS).updateOne(
+    { _id: ObjectID(id) },
+    { $set: { status: 'doing' } },
+    {
+      upsert: true,
+    }
+  );
+};
+exports.updateStatusCancel = async (id) => {
+  return await db.records.collection(CONTRACTS).updateOne(
+    { _id: ObjectID(id) },
+    { $set: { status: 'cancel' } },
+    {
+      upsert: true,
+    }
+  );
 };
 exports.addContract = async (contract) => {
   return await db.records.collection(CONTRACTS).insertOne({

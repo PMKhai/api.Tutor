@@ -131,4 +131,62 @@ router.get('/revenue', (req, res) => {
     }
   })(req, res);
 });
+router.put('/acceptcontract', (req, res) => {
+  passport.authenticate('jwt', { session: false }, async (err, user, info) => {
+    if (err || !user) {
+      return res.status(401).json({
+        returnCode: 0,
+        returnMessage: info ? info.message : err,
+      });
+    } else if (!user.isTutor) {
+      return res
+        .status(400)
+        .json({ returnCode: 0, returnMesage: 'Wrong role' });
+    } else {
+      const { id } = req.body;
+      const result = await contractModel.updateStatusAccept(id);
+
+      if (result) {
+        return res.status(200).json({
+          returnCode: 1,
+          returnMessage: 'successfully',
+        });
+      } else {
+        return res.status(500).json({
+          returnCode: 0,
+          returnMessage: 'Error',
+        });
+      }
+    }
+  })(req, res);
+});
+router.put('/canceltcontract', (req, res) => {
+  passport.authenticate('jwt', { session: false }, async (err, user, info) => {
+    if (err || !user) {
+      return res.status(401).json({
+        returnCode: 0,
+        returnMessage: info ? info.message : err,
+      });
+    } else if (!user.isTutor) {
+      return res
+        .status(400)
+        .json({ returnCode: 0, returnMesage: 'Wrong role' });
+    } else {
+      const { id } = req.body;
+      const result = await contractModel.updateStatusCancel(id);
+
+      if (result) {
+        return res.status(200).json({
+          returnCode: 1,
+          returnMessage: 'successfully',
+        });
+      } else {
+        return res.status(500).json({
+          returnCode: 0,
+          returnMessage: 'Error',
+        });
+      }
+    }
+  })(req, res);
+});
 module.exports = router;
