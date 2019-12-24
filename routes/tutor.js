@@ -114,7 +114,7 @@ router.get('/revenue', (req, res) => {
 
       if (data) {
         const revenue = _.filter(data, (o) => {
-          return o.payment > 0;
+          return o.totalMoney > 0;
         });
 
         return res.status(200).json({
