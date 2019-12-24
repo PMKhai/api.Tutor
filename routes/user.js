@@ -8,6 +8,7 @@ const passport = require('passport');
 const nodemailer = require('nodemailer');
 const account = require('../const/emailAcount');
 const bcrypt = require('bcrypt');
+const contractModel = require('../model/contracts');
 // POST LOGIN
 router.post('/login', (req, res, next) => {
   //const json = { returncode: 0, returnmessage: '' };
@@ -303,5 +304,30 @@ router.put('/sendmessage', async (req, res) => {
     }
   })(req, res);
 });
+router.get('/contract', (req, res) => {
+  passport.authenticate('jwt', { session: false }, async (err, user, info) => {
+    if (err || !user) {
+      return res.status(401).json({
+        returnCode: 0,
+        returnMessage: info ? info.message : err,
+      });
+    } else {
+      const { email } = user;
+      const registrationList = await contractModel.getContractByEmail(email);
 
+      if (registrationList) {
+        return res.status(200).json({
+          returnCode: 1,
+          returnMessage: 'successfully',
+          registration: registrationList,
+        });
+      } else {
+        return res.status(500).json({
+          returnCode: 0,
+          returnMessage: 'Error',
+        });
+      }
+    }
+  })(req, res);
+});
 module.exports = router;

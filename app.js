@@ -10,7 +10,7 @@ var usersRouter = require('./routes/user');
 const profileRouter = require('./routes/profile');
 const tutorRouter = require('./routes/tutor');
 const skillRouter = require('./routes/skill');
-const payment = require('./routes/payment')
+const contract = require('./routes/contract')
 var app = express();
 // fix cors
 app.use(cors());
@@ -31,7 +31,7 @@ app.use('/user', usersRouter);
 app.use('/me', profileRouter);
 app.use('/tutor', tutorRouter);
 app.use('/skill',skillRouter);
-app.use('/payment',payment);
+app.use('/contract',contract);
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
