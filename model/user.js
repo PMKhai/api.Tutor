@@ -33,6 +33,7 @@ exports.register = async (user, token) => {
     skills: [],
     price: 0,
     rating: 0,
+    reviews: [],
   });
 };
 exports.validJwtPayloadId = async (id) => {
@@ -105,17 +106,21 @@ exports.changePassword = async (email, info) => {
     }
   );
 };
-exports.addToken = async (email,token) => {
-  return await db.records.collection(USERS).updateOne({
-      email : email
-  }, {
+exports.addToken = async (email, token) => {
+  return await db.records.collection(USERS).updateOne(
+    {
+      email: email,
+    },
+    {
       $set: {
-          token: token ,
-      }
-  }, {
-      upsert: true
-  })
+        token: token,
+      },
+    },
+    {
+      upsert: true,
+    }
+  );
 };
 exports.findToken = async (token) => {
-  return await db.records.collection(USERS).findOne({ token }); 
-}
+  return await db.records.collection(USERS).findOne({ token });
+};
