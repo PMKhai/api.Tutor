@@ -124,3 +124,19 @@ exports.addToken = async (email, token) => {
 exports.findToken = async (token) => {
   return await db.records.collection(USERS).findOne({ token });
 };
+
+exports.updateNewReview = async (id, user, rating, content) => {
+  const owner = {
+    email: user.email,
+    name: user.name,
+    urlAvatar: user.urlAvatar,
+  };
+  console.log({ owner, rating, content });
+  return await db.records.collection(USERS).updateOne(
+    { _id: ObjectID(id) },
+    { $push: { reviews: { owner, rating, content } } },
+    {
+      upsert: true,
+    }
+  );
+};
