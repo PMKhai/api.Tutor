@@ -9,6 +9,7 @@ const nodemailer = require('nodemailer');
 const account = require('../const/emailAcount');
 const bcrypt = require('bcrypt');
 const contractModel = require('../model/contracts');
+const url = require('../config/url')
 // POST LOGIN
 router.post('/login', (req, res, next) => {
   //const json = { returncode: 0, returnmessage: '' };
@@ -49,7 +50,7 @@ router.get('/verify', async (req, res) => {
     //   returnmessage: 'verified successfully',
     //   user: user,
     // });
-    return res.redirect('http://localhost:3000/');
+    return res.redirect(url.frontend);
   } else {
     return res.status(401).json({
       returncode: 0,
@@ -67,7 +68,7 @@ const smtpTransport = nodemailer.createTransport({
 });
 const sendmailRecover = (req, res, next) => {
   const token = buffer.from(req.body.email).toString('base64');
-  const link = 'http://localhost:3000/changepassword?token=' + token;
+  const link = `${url.frontend}changepassword?token=` + token;
   const mailOptions = {
     to: req.body.email,
     subject: 'Phục hồi tài khoản UBER FOR TUTOR',
@@ -80,6 +81,7 @@ const sendmailRecover = (req, res, next) => {
   smtpTransport.sendMail(mailOptions, (error) => {
     if (error) next(error);
   });
+  console.log(mailOptions);
   return token;
 };
 const sendmailActivate = (req, res, next) => {

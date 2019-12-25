@@ -16,16 +16,41 @@ exports.getContractByEmail = async (email) => {
       .toArray();
   }
 };
-exports.getContractById = async (idContract) => {
-  return await db.records
-    .collection(CONTRACTS)
-    .find({ idContract: idContract })
-    .toArray();
+exports.getContractByOderId = async (orderId) => {
+  return await db.records.collection(CONTRACTS).findOne({ orderId }); 
+};
+
+exports.addOrderId = async (id, orderId) => {
+  return await db.records.collection(CONTRACTS).updateOne(
+    { _id: ObjectID(id) },
+    { $set: { orderId: orderId } },
+    {
+      upsert: true,
+    }
+  );
 };
 exports.updateStatus = async (id, status) => {
   return await db.records.collection(CONTRACTS).updateOne(
     { _id: ObjectID(id) },
     { $set: { status: status } },
+    {
+      upsert: true,
+    }
+  );
+};
+exports.updateDone = async (id, endDate) => {
+  return await db.records.collection(CONTRACTS).updateOne(
+    { _id: ObjectID(id) },
+    { $set: { status: 'done', endDate: endDate } },
+    {
+      upsert: true,
+    }
+  );
+};
+exports.updatePayment = async (orderId, dayOfPayment) => {
+  return await db.records.collection(CONTRACTS).updateOne(
+    { orderId: orderId },
+    { $set: { isPaid: true, status: 'doing', dayOfPayment: dayOfPayment } },
     {
       upsert: true,
     }
@@ -43,7 +68,6 @@ exports.report = async (contract) => {
 
 exports.addContract = async (contract) => {
   return await db.records.collection(CONTRACTS).insertOne({
-    idContract: contract.idContract, // mã hợp đồng dùng cho việc truy xuất đồng thời mã
     // này cũng trùng với mã thanh toán ở sanbox vn pay tiện cho việc kiểm tra về sau
     tutor: contract.tutor,
     student: contract.student,
@@ -52,10 +76,14 @@ exports.addContract = async (contract) => {
     monthlyLimit: contract.monthlyLimit,
     weekylyBonus: contract.weeklyBonus,
     totalHour: contract.totalHour,
-    totalMoney: contract.amount,
+    totalMoney: contract.totalMoney,
     status: 'pending',
     isPaid: false, //nếu đã được thanh toán qua sandbox vnpay thì update thành true
-    dayOfPayment: contract.dayOfPayment, // ngày thanh toán qua sandbox vn pay
+    oderId: null,
     dayOfHire: contract.dayOfHire,
+    dayOfPayment: null, // ngày thanh toán qua sandbox vn pay
+    startDate: contract.startDate,
+    endDate: null,
+    reason: null,
   });
 };

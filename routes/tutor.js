@@ -4,7 +4,7 @@ const passport = require('passport');
 const userModel = require('../model/user');
 const contractModel = require('../model/contracts');
 const _ = require('lodash');
-
+const dateFormat = require('dateformat');
 // GET all tutors listing
 router.get('/all', async (req, res) => {
   const tutorListing = await userModel.getAllTutor();
@@ -110,7 +110,7 @@ router.put('/acceptcontract', (req, res) => {
         .json({ returnCode: 0, returnMesage: 'Wrong role' });
     } else {
       const { id } = req.body;
-      const result = await contractModel.updateStatus(id,"pending");
+      const result = await contractModel.updateStatus(id,"paying");
 
       if (result) {
         return res.status(200).json({
@@ -160,7 +160,9 @@ router.put('/donecontract', (req, res) => {
       });
     } else {
       const { id } = req.body;
-      const result = await contractModel.updateStatus(id,"done");
+      var date = new Date();
+      date  = dateFormat(date,'dd/mm/yyyy');
+      const result = await contractModel.updateDone(id,date);
 
       if (result) {
         return res.status(200).json({

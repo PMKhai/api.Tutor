@@ -10,6 +10,50 @@ const dateFormat = require('dateformat');
 const sha256 = require('sha256');
 const querystring = require('qs');
 const contractModel = require('../model/contracts');
+const url = require('../config/url');
+const nodemailer = require('nodemailer');
+const account = require('../const/emailAcount');
+
+const smtpTransport = nodemailer.createTransport({
+  host: 'gmail.com',
+  service: 'Gmail',
+  auth: {
+    user: account.GMAIL,
+    pass: account.GMAIL_PASSWORD,
+  },
+});
+const sendmailPaymentToTutor = (contract) => {
+  const mailOptions = {
+    to: contract.tutor,
+    subject: 'THANH TOÁN HỢP ĐỒNG UBER FOR TUTOR',
+    html: `Chào bạn!,<br>Học viên của bạn đã thanh toán thành công cho hợp đồng Uber For Tutor.
+    Thông tin hợp đồng:<br>
+    -Ngày bắt đầu: ${contract.startDate}<br>
+    -Tổng tiền: ${contract.totalMoney * 23000} VNĐ <br>
+    -Tổng số giờ: ${contract.totalHour} giờ<br>
+    -Email học viên: ${contract.student}<br>`,
+  };
+  smtpTransport.sendMail(mailOptions, (error) => {
+    if (error) return error;
+  });
+  return null;
+};
+const sendmailPaymentToStudent = (contract) => {
+  const mailOptions = {
+    to: contract.student,
+    subject: 'THANH TOÁN HỢP ĐỒNG UBER FOR TUTOR',
+    html: `Chào bạn!,<br>Bạn đã thanh toán thành công cho hợp đồng Uber For Tutor.<br>
+       Thông tin hợp đồng:<br>
+      -Ngày bắt đầu: ${contract.startDate}<br>
+      -Tổng tiền: ${contract.totalMoney * 23000} VNĐ <br>
+      -Tổng số giờ: ${contract.totalHour} giờ<br>
+      -Email giáo viên: ${contract.tutor}<br>`,
+  };
+  smtpTransport.sendMail(mailOptions, (error) => {
+    if (error) return error;
+  });
+  return null;
+};
 router.get('/', function(req, res, next) {
   res.render('orderlist', { title: 'Danh sách đơn hàng' });
 });
@@ -44,18 +88,16 @@ router.post('/addnew', async (req, res, next) => {
   // add contract vào db
   const contract = req.body;
   var date = new Date();
-  contract.idContract = dateFormat(date, 'yyyymmddHHmmss');
-  contract.dayOfPayment = '';
-
+  var dateOfHire = dateFormat(date, 'dd/mm/yyyy');
+  contract.dayOfHire = dateOfHire;
+  contract.startDate = dateFormat(contract.startDate, 'dd/mm/yyyy');
   const isAdded = await contractModel.addContract(contract);
   if (isAdded) {
-    res
-      .status(200)
-      .json({
-        returncode: 1,
-        returnmessage:
-          'Hire contract was sent to tutor. Please wait for your registration !!!',
-      });
+    res.status(200).json({
+      returncode: 1,
+      returnmessage:
+        'Hire contract was sent to tutor. Please wait for your registration !!!',
+    });
   } else {
     res
       .status(201)
@@ -78,7 +120,7 @@ router.post('/create_payment_url', async (req, res, next) => {
   var date = new Date();
 
   var createDate = dateFormat(date, 'yyyymmddHHmmss');
-  var orderId = createDate;
+  var orderId = dateFormat(date, 'yyyymmddHHmmss');
   var amount = req.body.amount;
   var bankCode = req.body.bankCode;
   var orderInfo = req.body.orderDescription;
@@ -117,28 +159,27 @@ router.post('/create_payment_url', async (req, res, next) => {
   vnp_Params['vnp_SecureHash'] = secureHash;
   vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: true });
 
-  // // add contract vào db
-  // const contract = req.body;
-  // contract.idContract = orderId;
-  // contract.dayOfPayment = createDate;
+  console.log('queo', vnpUrl);
+  // add oderId vao contract
 
-  // const isAdded = await contractModel.addContract(contract);
-  // if(isAdded)
-  // {
-  //   res.status(200).json({ returncode:1,returnmessage:"successfully", result: vnpUrl });
-  // }
-  // else
-  // {
-  //     res.status(201).json({ returncode:0,returnmessage:"error"});
-  // }
+  const isAdded = await contractModel.addOrderId(req.body._id, orderId);
+  if (isAdded) {
+    res
+      .status(200)
+      .json({ returnCode: 1, returnMessage: 'successfully', result: vnpUrl });
+  } else {
+    res
+      .status(201)
+      .json({ returnCode: 0, returnMesage: 'something is wrong !!!' });
+  }
   //
   //Neu muon dung Redirect thi dong dong ben duoi
 
   //Neu muon dung Redirect thi mo dong ben duoi va dong dong ben tren
-  res.redirect(vnpUrl);
+  //res.redirect(vnpUrl);
 });
 
-router.get('/vnpay_return', function(req, res, next) {
+router.get('/vnpay_return', async (req, res, next) => {
   var vnp_Params = req.query;
   var secureHash = vnp_Params['vnp_SecureHash'];
 
@@ -158,10 +199,25 @@ router.get('/vnpay_return', function(req, res, next) {
   if (secureHash === checkSum) {
     var orderId = vnp_Params['vnp_TxnRef'];
     var rspCode = vnp_Params['vnp_ResponseCode'];
+    const dayOfPayment = vnp_Params['vnp_PayDate'];
     //Kiem tra du lieu co hop le khong, cap nhat trang thai don hang va gui ket qua cho VNPAY theo dinh dang duoi
-    res.status(200).json({ RspCode: '00', Message: 'success' });
+    const isUpdate = await contractModel.updatePayment(orderId, dayOfPayment);
+    if (isUpdate) {
+      // res.status(200).json({ returnCode: 1, returnMesage: 'successfully !!!' });
+      const contract = await contractModel.getContractByOderId(orderId);
+      if (contract) {
+        sendmailPaymentToStudent(contract);
+        sendmailPaymentToTutor(contract);
+      }
+
+      res.redirect(`${url.frontend}contract`);
+    } else {
+      res
+        .status(201)
+        .json({ returnCode: 0, returnMesage: 'something is wrong !!!' });
+    }
   } else {
-    res.status(200).json({ RspCode: '97', Message: 'Fail checksum' });
+    res.status(201).json({ returnCode: 0, returnMesage: 'Fail checksum' });
   }
 });
 
@@ -220,7 +276,7 @@ router.put('/cancelcontract', (req, res) => {
         returnCode: 0,
         returnMessage: info ? info.message : err,
       });
-    }  else {
+    } else {
       const { id } = req.body;
       const result = await contractModel.updateStatusCancel(id);
 
