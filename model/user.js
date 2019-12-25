@@ -21,15 +21,15 @@ exports.register = async (user, token) => {
     isActivated: false,
     token,
     name: user.name ? user.name : 'Noname',
-    p_number: user.p_number ? user.p_number : '',
+    p_number: user.p_number ? user.p_number : null,
     urlAvatar: user.urlAvatar
       ? user.urlAvatar
       : 'https://firebasestorage.googleapis.com/v0/b/caro-react-redux.appspot.com/o/dafault-avatar.jpg?alt=media&token=690645e6-8b99-4542-a8c7-1f4537bd19ae',
     address: {
-      province: '',
-      district: '',
+      province: null,
+      district: null,
     },
-    overview: '',
+    overview: null,
     skills: [],
     price: 1,
     rating: 1,

@@ -74,7 +74,7 @@ exports.addContract = async (contract) => {
     hourlyPrice: contract.hourlyPrice,
     weeklyLimit: contract.weeklyLimit,
     monthlyLimit: contract.monthlyLimit,
-    weekylyBonus: contract.weeklyBonus,
+    weeklyBonus: contract.weeklyBonus,
     totalHour: contract.totalHour,
     totalMoney: contract.totalMoney,
     status: 'pending',
