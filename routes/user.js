@@ -304,7 +304,7 @@ router.put('/sendmessage', async (req, res) => {
     }
   })(req, res);
 });
-router.get('/contract', (req, res) => {
+router.get('/contract', async (req, res) => {
   passport.authenticate('jwt', { session: false }, async (err, user, info) => {
     if (err || !user) {
       return res.status(401).json({
@@ -323,6 +323,53 @@ router.get('/contract', (req, res) => {
         });
       } else {
         return res.status(500).json({
+          returnCode: 0,
+          returnMessage: 'Error',
+        });
+      }
+    }
+  })(req, res);
+});
+router.put('/messagefromprofile', async (req, res) => {
+  passport.authenticate('jwt', { session: false }, async (err, user, info) => {
+    if (err || !user) {
+      return res.status(401).json({
+        returnCode: 0,
+        returnMessage: info ? info.message : err,
+      });
+    } else {
+      const { id } = req.query;
+      const { message } = req.body;
+      const receiver = await userModel.getById(id);
+
+      console.log(user.email);
+      console.log(receiver.email);
+      if (receiver) {
+        const isExist = await messageModel.getExistMessage(
+          user.email,
+          receiver.email
+        );
+        console.log(isExist);
+        const result = isExist[0]
+          ? await messageModel.updateMessageArrayById(
+              isExist[0]._id,
+              user.email,
+              message
+            )
+          : await messageModel.insertNewRoom(user, receiver, message);
+
+        if (result)
+          return res.status(200).json({
+            returnCode: 1,
+            returnMessage: 'Update message successfully',
+          });
+        else
+          return res.status(500).json({
+            returnCode: 0,
+            returnMessage: 'Error',
+          });
+      } else {
+        return res.status(400).json({
           returnCode: 0,
           returnMessage: 'Error',
         });
