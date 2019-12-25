@@ -342,14 +342,11 @@ router.put('/messagefromprofile', async (req, res) => {
       const { message } = req.body;
       const receiver = await userModel.getById(id);
 
-      console.log(user.email);
-      console.log(receiver.email);
       if (receiver) {
         const isExist = await messageModel.getExistMessage(
           user.email,
           receiver.email
         );
-        console.log(isExist);
         const result = isExist[0]
           ? await messageModel.updateMessageArrayById(
               isExist[0]._id,
