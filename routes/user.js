@@ -376,4 +376,44 @@ router.put('/messagefromprofile', async (req, res) => {
     }
   })(req, res);
 });
+router.put('/review', async (req, res) => {
+  passport.authenticate('jwt', { session: false }, async (err, user, info) => {
+    if (err || !user) {
+      return res.status(401).json({
+        returnCode: 0,
+        returnMessage: info ? info.message : err,
+      });
+    } else {
+      const { id } = req.query;
+      const { review, rating } = req.body;
+      const isUpdateReview = await userModel.updateNewReview(
+        id,
+        user,
+        rating,
+        review
+      );
+
+      if (isUpdateReview) {
+        return res.status(200).json({
+          returnCode: 1,
+          returnMessage: 'Update review successfully',
+          newReview: {
+            owner: {
+              email: user.email,
+              name: user.name,
+              urlAvatar: user.urlAvatar,
+            },
+            rating,
+            content,
+          },
+        });
+      } else {
+        return res.status(400).json({
+          returnCode: 0,
+          returnMessage: 'Error',
+        });
+      }
+    }
+  })(req, res);
+});
 module.exports = router;

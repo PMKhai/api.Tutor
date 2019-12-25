@@ -80,7 +80,7 @@ router.get('/revenue', (req, res) => {
 
       if (data) {
         const revenue = _.filter(data, (o) => {
-          return o.totalMoney > 0;
+          return o.totalMoney > 0 && o.status === 'done';
         });
 
         return res.status(200).json({
@@ -110,7 +110,7 @@ router.put('/acceptcontract', (req, res) => {
         .json({ returnCode: 0, returnMesage: 'Wrong role' });
     } else {
       const { id } = req.body;
-      const result = await contractModel.updateStatus(id,"paying");
+      const result = await contractModel.updateStatus(id, 'pending');
 
       if (result) {
         return res.status(200).json({
@@ -135,7 +135,7 @@ router.put('/cancelcontract', (req, res) => {
       });
     } else {
       const { id } = req.body;
-      const result = await contractModel.updateStatus(id,"cancel");
+      const result = await contractModel.updateStatus(id, 'cancel');
 
       if (result) {
         return res.status(200).json({
@@ -160,9 +160,7 @@ router.put('/donecontract', (req, res) => {
       });
     } else {
       const { id } = req.body;
-      var date = new Date();
-      date  = dateFormat(date,'dd/mm/yyyy');
-      const result = await contractModel.updateDone(id,date);
+      const result = await contractModel.updateStatus(id, 'done');
 
       if (result) {
         return res.status(200).json({
@@ -186,14 +184,15 @@ router.put('/reportcontract', (req, res) => {
         returnMessage: info ? info.message : err,
       });
     } else {
-      const contract= req.body;
+      const contract = req.body;
       console.log(contract);
       const result = await contractModel.report(contract);
 
       if (result) {
         return res.status(200).json({
           returnCode: 1,
-          returnMessage: 'Your report was sent to administration, you will be contacted soon !!!',
+          returnMessage:
+            'Your report was sent to administration, you will be contacted soon !!!',
         });
       } else {
         return res.status(201).json({
