@@ -31,8 +31,8 @@ exports.register = async (user, token) => {
     },
     overview: '',
     skills: [],
-    price: 0,
-    rating: 0,
+    price: 1,
+    rating: 1,
     reviews: [],
   });
 };
